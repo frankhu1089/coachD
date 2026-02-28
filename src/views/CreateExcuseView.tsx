@@ -14,7 +14,7 @@ interface Props {
 
 export default function CreateExcuseView({ currentUser, onClose, onCreated }: Props) {
   const [context, setContext] = useState(autoContext())
-  const [excuse, setExcuse] = useState('太累')
+  const [excuse, setExcuse] = useState('疲累一天')
   const [customNote, setCustomNote] = useState('')
   const create = useMutation(api.excuseEvents.create)
 
@@ -94,13 +94,18 @@ export default function CreateExcuseView({ currentUser, onClose, onCreated }: Pr
             placeholder="說說看…"
             value={customNote}
             onChange={e => setCustomNote(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && customNote.trim()) submit() }}
             autoFocus
           />
         )}
       </div>
 
       {/* Submit */}
-      <button className="btn-primary" onClick={submit}>
+      <button
+        className="btn-primary"
+        style={excuse === '其他' && !customNote.trim() ? { opacity: 0.4, pointerEvents: 'none' } : {}}
+        onClick={submit}
+      >
         下一步 →
       </button>
     </div>
