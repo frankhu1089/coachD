@@ -20,7 +20,11 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose }: 
   const events = useQuery(api.excuseEvents.listAll) as ExcuseEvent[] | undefined
   const event = events?.find((e: ExcuseEvent) => e._id === eventId)
 
-  if (!event) return null
+  if (!event) return (
+    <div className="flex items-center justify-center" style={{ minHeight: 440 }}>
+      <div className="w-6 h-6 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+    </div>
+  )
 
   async function accept() {
     await updateStatus({ id: eventId, status: 'minimal' })

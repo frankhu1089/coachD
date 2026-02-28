@@ -16,20 +16,29 @@ export default function CreateExcuseView({ currentUser, onClose, onCreated }: Pr
   const [context, setContext] = useState(autoContext())
   const [excuse, setExcuse] = useState('疲累一天')
   const [customNote, setCustomNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const create = useMutation(api.excuseEvents.create)
 
   async function submit() {
-    const s = suggestionsFor(excuse)
-    const suggestedAction = s[Math.floor(Math.random() * s.length)]
-    const id = await create({
-      timestamp: Date.now(),
-      context,
-      excuse,
-      customNote: excuse === '其他' && customNote.trim() ? customNote.trim() : undefined,
-      suggestedAction,
-      userId: currentUser,
-    })
-    onCreated(id)
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const s = suggestionsFor(excuse)
+      const suggestedAction = s[Math.floor(Math.random() * s.length)]
+      const id = await create({
+        timestamp: Date.now(),
+        context,
+        excuse,
+        customNote: excuse === '其他' && customNote.trim() ? customNote.trim() : undefined,
+        suggestedAction,
+        userId: currentUser,
+      })
+      onCreated(id)
+    } catch (err) {
+      console.error('create failed', err)
+      alert('出錯了，請再試一次')
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -103,10 +112,10 @@ export default function CreateExcuseView({ currentUser, onClose, onCreated }: Pr
       {/* Submit */}
       <button
         className="btn-primary"
-        style={excuse === '其他' && !customNote.trim() ? { opacity: 0.4, pointerEvents: 'none' } : {}}
+        style={(excuse === '其他' && !customNote.trim()) || submitting ? { opacity: 0.4, pointerEvents: 'none' } : {}}
         onClick={submit}
       >
-        下一步 →
+        {submitting ? '處理中…' : '下一步 →'}
       </button>
     </div>
   )
