@@ -3,16 +3,18 @@ import { api } from '../../convex/_generated/api'
 import CatView from '../components/CatView'
 import { displayExcuse } from '../theme'
 import type { ExcuseEvent } from '../types'
+import type { UserId } from '../App'
 
-interface Props { onClose: () => void }
+interface Props { currentUser: UserId; onClose: () => void }
 
 function isSameMonth(ts: number) {
   const d = new Date(ts), now = new Date()
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
 }
 
-export default function MonthlyReviewView({ onClose }: Props) {
-  const events = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
+export default function MonthlyReviewView({ currentUser, onClose }: Props) {
+  const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
+  const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
   const monthEvents = events.filter((e: ExcuseEvent) => isSameMonth(e.timestamp))
 
   const fullCount = monthEvents.filter((e: ExcuseEvent) => e.status === 'full').length

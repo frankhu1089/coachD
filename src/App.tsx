@@ -8,6 +8,8 @@ import NightClosureView from './views/NightClosureView'
 import WeeklyReviewView from './views/WeeklyReviewView'
 import MonthlyReviewView from './views/MonthlyReviewView'
 
+export type UserId = 'husband' | 'wife'
+
 type ActiveModal =
   | { type: 'none' }
   | { type: 'create' }
@@ -26,17 +28,26 @@ function getWeekOfYear(date: Date): number {
 
 export default function App() {
   const [modal, setModal] = useState<ActiveModal>({ type: 'none' })
+  const [currentUser, setCurrentUser] = useState<UserId>(
+    () => (localStorage.getItem('currentUser') as UserId | null) ?? 'husband'
+  )
+
+  function switchUser(user: UserId) {
+    setCurrentUser(user)
+    localStorage.setItem('currentUser', user)
+  }
 
   useEffect(() => {
     const day = new Date().getDay()
     if (day !== 0) return
     const thisWeek = getWeekOfYear(new Date())
-    const shown = parseInt(localStorage.getItem('lastWeeklyReviewWeek') ?? '0', 10)
+    const key = `lastWeeklyReviewWeek_${currentUser}`
+    const shown = parseInt(localStorage.getItem(key) ?? '0', 10)
     if (shown !== thisWeek) {
       setModal({ type: 'weekly' })
-      localStorage.setItem('lastWeeklyReviewWeek', String(thisWeek))
+      localStorage.setItem(key, String(thisWeek))
     }
-  }, [])
+  }, [currentUser])
 
   function closeModal() {
     setModal({ type: 'none' })
@@ -45,6 +56,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg">
       <HomeView
+        currentUser={currentUser}
+        onSwitchUser={switchUser}
         onAddExcuse={() => setModal({ type: 'create' })}
         onNightClosure={(id) => setModal({ type: 'nightClosure', eventId: id })}
         onWeekly={() => setModal({ type: 'weekly' })}
@@ -54,6 +67,7 @@ export default function App() {
       {modal.type === 'create' && (
         <Modal onClose={closeModal}>
           <CreateExcuseView
+            currentUser={currentUser}
             onClose={closeModal}
             onCreated={(id) => setModal({ type: 'action', eventId: id })}
           />
@@ -62,7 +76,7 @@ export default function App() {
 
       {modal.type === 'action' && (
         <Modal onClose={closeModal}>
-          <ActionSuggestionView eventId={modal.eventId} onClose={closeModal} />
+          <ActionSuggestionView currentUser={currentUser} eventId={modal.eventId} onClose={closeModal} />
         </Modal>
       )}
 
@@ -74,13 +88,13 @@ export default function App() {
 
       {modal.type === 'weekly' && (
         <Modal onClose={closeModal}>
-          <WeeklyReviewView onClose={closeModal} />
+          <WeeklyReviewView currentUser={currentUser} onClose={closeModal} />
         </Modal>
       )}
 
       {modal.type === 'monthly' && (
         <Modal onClose={closeModal}>
-          <MonthlyReviewView onClose={closeModal} />
+          <MonthlyReviewView currentUser={currentUser} onClose={closeModal} />
         </Modal>
       )}
     </div>

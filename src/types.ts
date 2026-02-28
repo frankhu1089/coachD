@@ -11,4 +11,5 @@ export interface ExcuseEvent {
   customNote?: string
   suggestedAction: string
   status?: string
+  userId?: string
 }

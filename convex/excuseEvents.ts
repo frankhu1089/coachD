@@ -19,6 +19,7 @@ export const create = mutation({
     excuse: v.string(),
     customNote: v.optional(v.string()),
     suggestedAction: v.string(),
+    userId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('excuseEvents', {

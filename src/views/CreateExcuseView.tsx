@@ -4,13 +4,15 @@ import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import CatView from '../components/CatView'
 import { excuses, autoContext, suggestionsFor } from '../theme'
+import type { UserId } from '../App'
 
 interface Props {
+  currentUser: UserId
   onClose: () => void
   onCreated: (eventId: Id<'excuseEvents'>) => void
 }
 
-export default function CreateExcuseView({ onClose, onCreated }: Props) {
+export default function CreateExcuseView({ currentUser, onClose, onCreated }: Props) {
   const [context, setContext] = useState(autoContext())
   const [excuse, setExcuse] = useState('太累')
   const [customNote, setCustomNote] = useState('')
@@ -25,6 +27,7 @@ export default function CreateExcuseView({ onClose, onCreated }: Props) {
       excuse,
       customNote: excuse === '其他' && customNote.trim() ? customNote.trim() : undefined,
       suggestedAction,
+      userId: currentUser,
     })
     onCreated(id)
   }

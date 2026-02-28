@@ -7,8 +7,11 @@ import { displayExcuse } from '../theme'
 import { formatDistanceToNow } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import type { ExcuseEvent } from '../types'
+import type { UserId } from '../App'
 
 interface Props {
+  currentUser: UserId
+  onSwitchUser: (user: UserId) => void
   onAddExcuse: () => void
   onNightClosure: (eventId: Id<'excuseEvents'>) => void
   onWeekly: () => void
@@ -25,11 +28,12 @@ function isSameDay(ts: number, date: Date) {
   return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate()
 }
 
-export default function HomeView({ onAddExcuse, onNightClosure, onWeekly, onMonthly }: Props) {
+export default function HomeView({ currentUser, onSwitchUser, onAddExcuse, onNightClosure, onWeekly, onMonthly }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
-  const events = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
+  const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
   const deleteEvent = useMutation(api.excuseEvents.deleteEvent)
 
+  const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
   const todayEvents = events.filter((e: ExcuseEvent) => isToday(e.timestamp))
   const unresolvedEvents = events.filter((e: ExcuseEvent) => e.status == null)
 
@@ -54,7 +58,9 @@ export default function HomeView({ onAddExcuse, onNightClosure, onWeekly, onMont
   const catSpeech = todayEvents.length === 0
     ? '今天還沒有任何藉口，繼續保持！'
     : unresolvedEvents.length === 0
-      ? '你今天表現不錯，迪教練稍微有點滿意。'
+      ? currentUser === 'wife'
+        ? '你今天表現不錯，記得聯絡老公！'
+        : '你今天表現不錯，迪教練稍微有點滿意。'
       : `還有 ${unresolvedEvents.length} 個待結案的藉口喔。`
 
   return (
@@ -62,6 +68,18 @@ export default function HomeView({ onAddExcuse, onNightClosure, onWeekly, onMont
       {/* Top bar */}
       <div className="flex justify-between items-center px-5 pt-6 pb-2">
         <span className="font-serif text-sm font-semibold text-accent tracking-wide">迪教練</span>
+        <div className="flex items-center gap-2">
+          {/* User switcher */}
+          <div className="flex rounded-full border border-border overflow-hidden text-xs font-medium">
+            <button
+              className={`px-3 py-1 transition-colors ${currentUser === 'husband' ? 'bg-accent text-white' : 'text-textSecondary hover:bg-accentSoft/40'}`}
+              onClick={() => onSwitchUser('husband')}
+            >我</button>
+            <button
+              className={`px-3 py-1 transition-colors ${currentUser === 'wife' ? 'bg-accent text-white' : 'text-textSecondary hover:bg-accentSoft/40'}`}
+              onClick={() => onSwitchUser('wife')}
+            >老婆</button>
+          </div>
         <div className="relative">
           <button
             className="w-8 h-8 rounded-full flex items-center justify-center text-textSecondary hover:bg-accentSoft transition-colors"
@@ -88,6 +106,7 @@ export default function HomeView({ onAddExcuse, onNightClosure, onWeekly, onMont
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
 

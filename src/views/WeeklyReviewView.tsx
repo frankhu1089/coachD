@@ -3,11 +3,13 @@ import { api } from '../../convex/_generated/api'
 import CatView from '../components/CatView'
 import { displayExcuse } from '../theme'
 import type { ExcuseEvent } from '../types'
+import type { UserId } from '../App'
 
-interface Props { onClose: () => void }
+interface Props { currentUser: UserId; onClose: () => void }
 
-export default function WeeklyReviewView({ onClose }: Props) {
-  const events = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
+export default function WeeklyReviewView({ currentUser, onClose }: Props) {
+  const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
+  const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
 
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   const weekEvents = events.filter((e: ExcuseEvent) => e.timestamp >= sevenDaysAgo)

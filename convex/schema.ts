@@ -9,5 +9,6 @@ export default defineSchema({
     customNote: v.optional(v.string()),
     suggestedAction: v.string(),
     status: v.optional(v.string()),
+    userId: v.optional(v.string()),
   }).index('by_timestamp', ['timestamp']),
 })

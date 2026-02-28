@@ -4,15 +4,17 @@ import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import CatView from '../components/CatView'
 import type { ExcuseEvent } from '../types'
+import type { UserId } from '../App'
 
 interface Props {
+  currentUser: UserId
   eventId: Id<'excuseEvents'>
   onClose: () => void
 }
 
 type Phase = 'initial' | 'accepted' | 'fullWorkout' | 'declined'
 
-export default function ActionSuggestionView({ eventId, onClose }: Props) {
+export default function ActionSuggestionView({ currentUser, eventId, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>('initial')
   const updateStatus = useMutation(api.excuseEvents.updateStatus)
   const events = useQuery(api.excuseEvents.listAll) as ExcuseEvent[] | undefined
@@ -127,7 +129,7 @@ export default function ActionSuggestionView({ eventId, onClose }: Props) {
                   ? '我今天做了完整運動！完全制霸 💪'
                   : `我今天差點逃避，但我還是做到了：${event.suggestedAction} 💪`
               )}
-            >分享給太太</button>
+            >{currentUser === 'wife' ? '聯絡老公' : '分享給太太'}</button>
             <button className="w-full py-3 text-sm text-textSecondary font-sans" onClick={onClose}>完成</button>
           </>
         )}
