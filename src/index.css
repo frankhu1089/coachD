@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-bg text-textPrimary font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Paper grain overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.028;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  * { box-sizing: border-box; }
+
+  button {
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  button:active {
+    opacity: 0.8;
+    transform: scale(0.985);
+  }
+}
+
+@layer components {
+  /* Card — paper sheet feel */
+  .card {
+    @apply bg-card rounded-card;
+    box-shadow:
+      0 1px 0 rgba(44, 26, 14, 0.06),
+      0 2px 8px rgba(44, 26, 14, 0.05),
+      0 0 0 1px rgba(44, 26, 14, 0.05);
+  }
+
+  /* Event row card with left accent border */
+  .event-card {
+    @apply card flex items-stretch overflow-hidden;
+  }
+
+  .event-card-bar {
+    width: 3px;
+    flex-shrink: 0;
+    @apply bg-accent opacity-60;
+  }
+
+  /* Primary CTA button */
+  .btn-primary {
+    @apply bg-accent text-white font-semibold w-full py-4 rounded-card font-sans;
+    font-size: 15px;
+    letter-spacing: 0.025em;
+    box-shadow:
+      0 2px 10px rgba(212, 149, 106, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .btn-primary:hover {
+    box-shadow:
+      0 4px 16px rgba(212, 149, 106, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .btn-primary:active {
+    box-shadow:
+      0 1px 4px rgba(212, 149, 106, 0.35),
+      inset 0 2px 6px rgba(0, 0, 0, 0.08);
+    transform: scale(0.99);
+  }
+
+  /* Section label */
+  .label-section {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    @apply text-textSecondary font-medium;
+  }
+
+  /* Divider dots — notebook paper feel */
+  .divider-dots {
+    @apply border-t border-dashed border-border;
+  }
+
+  /* Cat portrait circle */
+  .cat-portrait {
+    @apply rounded-full bg-accentSoft flex items-center justify-center;
+    box-shadow:
+      0 0 0 1px rgba(212, 149, 106, 0.15),
+      0 4px 16px rgba(212, 149, 106, 0.15);
+  }
+
+  /* Chip button */
+  .chip {
+    @apply rounded-chip font-sans text-sm font-medium py-2.5 px-3 transition-colors duration-150;
+    box-shadow: 0 0 0 1px rgba(44, 26, 14, 0.08);
+  }
+
+  .chip-inactive {
+    @apply chip bg-card text-textPrimary;
+  }
+
+  .chip-active {
+    @apply chip bg-accent text-white;
+    box-shadow: 0 0 0 1px rgba(212, 149, 106, 0.3), 0 2px 6px rgba(212, 149, 106, 0.3);
+  }
+
+  /* Stat number */
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    @apply tabular-nums font-medium;
+  }
+}
