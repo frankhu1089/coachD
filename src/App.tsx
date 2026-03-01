@@ -7,6 +7,7 @@ import ActionSuggestionView from './views/ActionSuggestionView'
 import NightClosureView from './views/NightClosureView'
 import WeeklyReviewView from './views/WeeklyReviewView'
 import MonthlyReviewView from './views/MonthlyReviewView'
+import WorkoutPlanView from './views/WorkoutPlanView'
 
 export type UserId = 'husband' | 'wife'
 
@@ -15,6 +16,7 @@ type ActiveModal =
   | { type: 'create' }
   | { type: 'action'; eventId: Id<'excuseEvents'> }
   | { type: 'nightClosure'; eventId: Id<'excuseEvents'> }
+  | { type: 'workout'; eventId: Id<'excuseEvents'> }
   | { type: 'weekly' }
   | { type: 'monthly' }
 
@@ -76,13 +78,24 @@ export default function App() {
 
       {modal.type === 'action' && (
         <Modal onClose={closeModal}>
-          <ActionSuggestionView currentUser={currentUser} eventId={modal.eventId} onClose={closeModal} />
+          <ActionSuggestionView
+            currentUser={currentUser}
+            eventId={modal.eventId}
+            onClose={closeModal}
+            onOpenWorkout={(id) => setModal({ type: 'workout', eventId: id })}
+          />
         </Modal>
       )}
 
       {modal.type === 'nightClosure' && (
         <Modal onClose={closeModal}>
-          <NightClosureView eventId={modal.eventId} onClose={closeModal} />
+          <NightClosureView currentUser={currentUser} eventId={modal.eventId} onClose={closeModal} />
+        </Modal>
+      )}
+
+      {modal.type === 'workout' && (
+        <Modal onClose={closeModal}>
+          <WorkoutPlanView currentUser={currentUser} eventId={modal.eventId} onClose={closeModal} />
         </Modal>
       )}
 

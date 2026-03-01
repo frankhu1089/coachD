@@ -10,11 +10,12 @@ interface Props {
   currentUser: UserId
   eventId: Id<'excuseEvents'>
   onClose: () => void
+  onOpenWorkout: (id: Id<'excuseEvents'>) => void
 }
 
 type Phase = 'initial' | 'accepted' | 'fullWorkout' | 'declined'
 
-export default function ActionSuggestionView({ currentUser, eventId, onClose }: Props) {
+export default function ActionSuggestionView({ currentUser, eventId, onClose, onOpenWorkout }: Props) {
   const [phase, setPhase] = useState<Phase>('initial')
   const updateStatus = useMutation(api.excuseEvents.updateStatus)
   const events = useQuery(api.excuseEvents.listAll) as ExcuseEvent[] | undefined
@@ -119,7 +120,7 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose }: 
             </div>
             <button
               className="w-full text-xs text-textSecondary/70 underline underline-offset-2 py-1 font-serif italic"
-              onClick={acceptFull}
+              onClick={() => onOpenWorkout(eventId)}
             >「其實我打算去做完整運動」</button>
           </>
         )}
@@ -139,10 +140,16 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose }: 
         )}
 
         {phase === 'declined' && (
-          <button
-            className="w-full py-4 rounded-card text-sm font-medium text-textSecondary bg-card border border-border"
-            onClick={onClose}
-          >沒關係，今晚再來</button>
+          <div className="space-y-2.5">
+            <button
+              className="btn-primary"
+              onClick={() => onOpenWorkout(eventId)}
+            >我想做別的運動</button>
+            <button
+              className="w-full py-4 rounded-card text-sm font-medium text-textSecondary bg-card border border-border"
+              onClick={onClose}
+            >沒關係，今晚再來</button>
+          </div>
         )}
       </div>
     </div>
