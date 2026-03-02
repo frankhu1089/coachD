@@ -33,11 +33,6 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
     setPhase('accepted')
   }
 
-  async function acceptFull() {
-    await updateStatus({ id: eventId, status: 'full' })
-    setPhase('fullWorkout')
-  }
-
   function decline() { setPhase('declined') }
 
   const catExpr = phase === 'accepted' || phase === 'fullWorkout' ? 'gentleSmile'
