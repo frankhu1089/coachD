@@ -7,6 +7,13 @@ import type { UserId } from '../App'
 
 interface Props { currentUser: UserId; onClose: () => void }
 
+function isSameDay(ts: number, date: Date) {
+  const d = new Date(ts)
+  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate()
+}
+
+const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
+
 export default function WeeklyReviewView({ currentUser, onClose }: Props) {
   const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
   const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
@@ -92,6 +99,35 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
               <span className="text-2xl">🏆</span>
             </div>
           )}
+
+          {/* 7-day heatmap */}
+          {(() => {
+            const days = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (6 - i)); return d
+            })
+            return (
+              <div className="card px-4 py-4">
+                <p className="label-section mb-3">本週每日</p>
+                <div className="grid grid-cols-7 gap-1">
+                  {days.map((day, i) => {
+                    const dayEvts = weekEvents.filter(e => isSameDay(e.timestamp, day))
+                    const hasFull = dayEvts.some(e => e.status === 'full')
+                    const hasMin = dayEvts.some(e => e.status === 'minimal')
+                    const hasNone = dayEvts.some(e => e.status === 'none')
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <span className="font-mono text-[9px] text-textSecondary">{DAY_NAMES[day.getDay()]}</span>
+                        <span className={`text-lg leading-none ${hasFull ? 'text-accent' : hasMin ? 'text-yellow' : hasNone ? 'text-red/60' : 'text-border'}`}>
+                          {hasFull ? '●' : hasMin ? '◑' : hasNone ? '○' : '·'}
+                        </span>
+                        <span className="font-mono text-[9px] text-textSecondary tabular-nums">{day.getDate()}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Cat message */}
           <div className="px-2 py-2 text-center">

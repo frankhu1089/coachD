@@ -7,6 +7,11 @@ import type { UserId } from '../App'
 
 interface Props { currentUser: UserId; onClose: () => void }
 
+function isSameDay(ts: number, date: Date) {
+  const d = new Date(ts)
+  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate()
+}
+
 function isSameMonth(ts: number) {
   const d = new Date(ts), now = new Date()
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
@@ -95,6 +100,45 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
               </p>
             </div>
           )}
+
+          {/* Monthly calendar heatmap */}
+          {(() => {
+            const today = new Date(); today.setHours(0, 0, 0, 0)
+            const year = today.getFullYear(); const month = today.getMonth()
+            const daysInMonth = new Date(year, month + 1, 0).getDate()
+            const startOffset = new Date(year, month, 1).getDay()
+            const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
+            const cells = [...Array(startOffset).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)]
+            return (
+              <div className="card px-4 py-4">
+                <p className="label-section mb-3">本月日曆</p>
+                <div className="grid grid-cols-7 gap-x-1 gap-y-0.5 mb-1.5">
+                  {DAY_NAMES.map(d => (
+                    <div key={d} className="text-center font-mono text-[9px] text-textSecondary">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-x-1 gap-y-1">
+                  {cells.map((dayNum, i) => {
+                    if (!dayNum) return <div key={i} />
+                    const dayDate = new Date(year, month, dayNum)
+                    const isFuture = dayDate > today
+                    const dayEvts = isFuture ? [] : monthEvents.filter(e => isSameDay(e.timestamp, dayDate))
+                    const hasFull = dayEvts.some(e => e.status === 'full')
+                    const hasMin = dayEvts.some(e => e.status === 'minimal')
+                    const hasNone = dayEvts.some(e => e.status === 'none')
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-0.5">
+                        <span className="font-mono text-[9px] text-textSecondary/60 tabular-nums">{dayNum}</span>
+                        <span className={`text-sm leading-none ${isFuture ? 'text-border' : hasFull ? 'text-accent' : hasMin ? 'text-yellow' : hasNone ? 'text-red/60' : dayEvts.length > 0 ? 'text-textSecondary/40' : 'text-border'}`}>
+                          {isFuture ? '·' : hasFull ? '●' : hasMin ? '◑' : hasNone ? '○' : '·'}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Closing message */}
           <div className="flex flex-col items-center gap-3 py-4">

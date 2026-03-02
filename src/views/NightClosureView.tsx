@@ -6,6 +6,7 @@ import CatView from '../components/CatView'
 import { displayExcuse } from '../theme'
 import type { ExcuseEvent } from '../types'
 import type { UserId } from '../App'
+import { shareText } from '../utils'
 
 interface Props {
   currentUser: UserId
@@ -13,7 +14,7 @@ interface Props {
   onClose: () => void
 }
 
-type Phase = 'pick' | 'share'
+type Phase = 'pick' | 'closed' | 'share'
 
 export default function NightClosureView({ currentUser, eventId, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>('pick')
@@ -27,23 +28,35 @@ export default function NightClosureView({ currentUser, eventId, onClose }: Prop
   async function close(status: 'full' | 'minimal' | 'none') {
     await updateStatus({ id: eventId, status })
     if (status === 'none') {
-      onClose()
+      setPhase('closed')
     } else {
       setCompletedStatus(status)
       setPhase('share')
     }
   }
 
-  async function share() {
+  function share() {
     const text = completedStatus === 'full'
       ? '我今天做了完整運動！完全制霸 💪'
       : `我今天差點逃避，但我還是做到了：${displayExcuse(event!.excuse, event!.customNote)} 💪`
-    if (navigator.share) {
-      try { await navigator.share({ text }) } catch { /**/ }
-    } else {
-      await navigator.clipboard.writeText(text)
-      alert('已複製到剪貼板')
-    }
+    return shareText(text)
+  }
+
+  if (phase === 'closed') {
+    return (
+      <div className="flex flex-col items-center px-5 pb-8 font-sans" style={{ minHeight: 400 }}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-5 pt-8 animate-fade-up">
+          <div className="cat-portrait w-28 h-28">
+            <CatView expression="sideEye" size={88} />
+          </div>
+          <div className="text-center px-4">
+            <p className="font-serif text-xl font-semibold text-textPrimary">好吧，明天見。</p>
+            <p className="text-xs text-textSecondary mt-2 font-serif italic">迪教練還在。</p>
+          </div>
+          <button className="btn-primary w-full" onClick={onClose}>好的，謝謝迪教練</button>
+        </div>
+      </div>
+    )
   }
 
   if (phase === 'share') {

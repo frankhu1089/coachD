@@ -5,6 +5,7 @@ import type { Id } from '../../convex/_generated/dataModel'
 import CatView from '../components/CatView'
 import type { ExcuseEvent } from '../types'
 import type { UserId } from '../App'
+import { shareText } from '../utils'
 
 interface Props {
   currentUser: UserId
@@ -38,15 +39,6 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
   }
 
   function decline() { setPhase('declined') }
-
-  async function share(text: string) {
-    if (navigator.share) {
-      try { await navigator.share({ text }) } catch { /**/ }
-    } else {
-      await navigator.clipboard.writeText(text)
-      alert('已複製到剪貼板')
-    }
-  }
 
   const catExpr = phase === 'accepted' || phase === 'fullWorkout' ? 'gentleSmile'
     : phase === 'declined' ? 'dramatic'
@@ -129,7 +121,7 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
           <>
             <button
               className="btn-primary"
-              onClick={() => share(
+              onClick={() => shareText(
                 phase === 'fullWorkout'
                   ? '我今天做了完整運動！完全制霸 💪'
                   : `我今天差點逃避，但我還是做到了：${event.suggestedAction} 💪`

@@ -5,6 +5,7 @@ import type { Id } from '../../convex/_generated/dataModel'
 import CatView from '../components/CatView'
 import { workoutPlans, workoutPlanKeys, type WorkoutPlanKey } from '../theme'
 import type { UserId } from '../App'
+import { shareText } from '../utils'
 
 interface Props {
   currentUser: UserId
@@ -18,15 +19,6 @@ export default function WorkoutPlanView({ currentUser, eventId, onClose }: Props
   const [phase, setPhase] = useState<Phase>('pick')
   const [picked, setPicked] = useState<WorkoutPlanKey | null>(null)
   const updateStatus = useMutation(api.excuseEvents.updateStatus)
-
-  async function share(text: string) {
-    if (navigator.share) {
-      try { await navigator.share({ text }) } catch { /**/ }
-    } else {
-      await navigator.clipboard.writeText(text)
-      alert('已複製到剪貼板')
-    }
-  }
 
   function pickPlan(key: WorkoutPlanKey | 'random') {
     if (key === 'random') {
@@ -141,7 +133,7 @@ export default function WorkoutPlanView({ currentUser, eventId, onClose }: Props
           <div className="w-full space-y-3">
             <button
               className="btn-primary"
-              onClick={() => share(`我今天做了完整的${plan.label}訓練！完全制霸 💪`)}
+              onClick={() => shareText(`我今天做了完整的${plan.label}訓練！完全制霸 💪`)}
             >{currentUser === 'wife' ? '聯絡老公' : '分享給太太'}</button>
             <button className="w-full py-3 text-sm text-textSecondary font-sans" onClick={onClose}>完成</button>
           </div>
