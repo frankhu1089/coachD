@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import CatView from '../components/CatView'
-import type { ExcuseEvent } from '../types'
 import type { UserId } from '../App'
 import { shareText } from '../utils'
 
@@ -18,9 +17,9 @@ type Phase = 'initial' | 'accepted' | 'fullWorkout' | 'declined'
 
 export default function ActionSuggestionView({ currentUser, eventId, onClose, onOpenWorkout }: Props) {
   const [phase, setPhase] = useState<Phase>('initial')
+  const [submitting, setSubmitting] = useState(false)
   const updateStatus = useMutation(api.excuseEvents.updateStatus)
-  const events = useQuery(api.excuseEvents.listAll) as ExcuseEvent[] | undefined
-  const event = events?.find((e: ExcuseEvent) => e._id === eventId)
+  const event = useQuery(api.excuseEvents.getById, { id: eventId })
 
   if (!event) return (
     <div className="flex items-center justify-center" style={{ minHeight: 440 }}>
@@ -29,8 +28,14 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
   )
 
   async function accept() {
-    await updateStatus({ id: eventId, status: 'minimal' })
-    setPhase('accepted')
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      await updateStatus({ id: eventId, status: 'minimal' })
+      setPhase('accepted')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function decline() { setPhase('declined') }
@@ -41,7 +46,6 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
 
   return (
     <div className="flex flex-col px-5 pb-8 font-sans" style={{ minHeight: 440 }}>
-      {/* Close */}
       <div className="flex justify-end pt-2 pb-4">
         <button
           className="w-8 h-8 rounded-full flex items-center justify-center text-textSecondary hover:bg-black/5 transition-colors"
@@ -53,7 +57,6 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
         </button>
       </div>
 
-      {/* Cat + message */}
       <div className="flex-1 flex flex-col items-center justify-center gap-5">
         <div className="cat-portrait w-28 h-28 animate-fade-up">
           <CatView expression={catExpr} size={96} />
@@ -90,19 +93,20 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="space-y-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
         {phase === 'initial' && (
           <>
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 className="py-4 rounded-card text-sm font-medium text-textPrimary bg-card border border-border hover:bg-accentSoft/30 transition-colors"
+                disabled={submitting}
                 onClick={decline}
               >❌ 我還沒</button>
               <button
-                className="py-4 rounded-card text-sm font-semibold text-white bg-green transition-colors"
+                className="py-4 rounded-card text-sm font-semibold text-white bg-green transition-colors disabled:opacity-50"
                 style={{ boxShadow: '0 2px 8px rgba(107,159,114,0.4)' }}
-                onClick={accept}
+                disabled={submitting}
+                onClick={() => { void accept() }}
               >✅ 好，我做了</button>
             </div>
             <button
@@ -116,7 +120,7 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
           <>
             <button
               className="btn-primary"
-              onClick={() => shareText(
+              onClick={() => void shareText(
                 phase === 'fullWorkout'
                   ? '我今天做了完整運動！完全制霸 💪'
                   : `我今天差點逃避，但我還是做到了：${event.suggestedAction} 💪`
@@ -128,10 +132,7 @@ export default function ActionSuggestionView({ currentUser, eventId, onClose, on
 
         {phase === 'declined' && (
           <div className="space-y-2.5">
-            <button
-              className="btn-primary"
-              onClick={() => onOpenWorkout(eventId)}
-            >我想做別的運動</button>
+            <button className="btn-primary" onClick={() => onOpenWorkout(eventId)}>我想做別的運動</button>
             <button
               className="w-full py-4 rounded-card text-sm font-medium text-textSecondary bg-card border border-border"
               onClick={onClose}

@@ -1,16 +1,13 @@
+import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import CatView from '../components/CatView'
 import { displayExcuse } from '../theme'
+import { isSameDay } from '../utils/date'
 import type { ExcuseEvent } from '../types'
 import type { UserId } from '../App'
 
 interface Props { currentUser: UserId; onClose: () => void }
-
-function isSameDay(ts: number, date: Date) {
-  const d = new Date(ts)
-  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate()
-}
 
 function isSameMonth(ts: number) {
   const d = new Date(ts), now = new Date()
@@ -18,12 +15,12 @@ function isSameMonth(ts: number) {
 }
 
 export default function MonthlyReviewView({ currentUser, onClose }: Props) {
-  const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
-  const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
-  const monthEvents = events.filter((e: ExcuseEvent) => isSameMonth(e.timestamp))
+  const eventsRaw = useQuery(api.excuseEvents.listByUser, { userId: currentUser })
+  const events = useMemo(() => (eventsRaw ?? []) as ExcuseEvent[], [eventsRaw])
+  const monthEvents = events.filter((e) => isSameMonth(e.timestamp))
 
-  const fullCount = monthEvents.filter((e: ExcuseEvent) => e.status === 'full').length
-  const minimalCount = monthEvents.filter((e: ExcuseEvent) => e.status === 'minimal').length
+  const fullCount = monthEvents.filter((e) => e.status === 'full').length
+  const minimalCount = monthEvents.filter((e) => e.status === 'minimal').length
   const avoidanceCount = monthEvents.length
   const actionCount = fullCount + minimalCount
   const conversionRate = avoidanceCount > 0 ? Math.round(actionCount / avoidanceCount * 100) : 0
@@ -31,7 +28,7 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
   const topExcuse = (() => {
     if (!monthEvents.length) return null
     const counts: Record<string, number> = {}
-    monthEvents.forEach((e: ExcuseEvent) => {
+    monthEvents.forEach((e) => {
       const k = displayExcuse(e.excuse, e.customNote)
       counts[k] = (counts[k] ?? 0) + 1
     })
@@ -44,7 +41,6 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
 
   return (
     <div className="px-5 pb-8 font-sans">
-      {/* Header */}
       <div className="flex items-baseline justify-between pt-4 pb-5">
         <div>
           <h2 className="font-serif text-xl font-bold text-textPrimary">本月轉化率</h2>
@@ -58,14 +54,11 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
           <div className="cat-portrait w-24 h-24">
             <CatView expression="gentleSmile" size={80} />
           </div>
-          <p className="font-serif italic text-sm text-textSecondary text-center px-10">
-            「這個月還沒有記錄。」
-          </p>
+          <p className="font-serif italic text-sm text-textSecondary text-center px-10">「這個月還沒有記錄。」</p>
           <button className="text-sm font-medium text-accent mt-2" onClick={onClose}>好的</button>
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Hero conversion rate */}
           <div
             className="rounded-card px-6 py-7 flex flex-col items-center"
             style={{ background: 'linear-gradient(135deg, #F0D9C8 0%, #FAF0E6 100%)' }}
@@ -82,7 +75,6 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
             </div>
           </div>
 
-          {/* Stats ledger */}
           <div className="card divide-y divide-border">
             <LedgerRow label="本月逃避" value={avoidanceCount} unit="次" />
             <LedgerRow label="仍然動了" value={actionCount} unit="次" color="text-green" />
@@ -90,7 +82,6 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
             <LedgerRow label="最小行動" value={minimalCount} unit="次" />
           </div>
 
-          {/* Top excuse */}
           {topExcuse && (
             <div className="card px-4 py-4">
               <span className="label-section block mb-1.5">本月最常見藉口</span>
@@ -101,14 +92,16 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
             </div>
           )}
 
-          {/* Monthly calendar heatmap */}
           {(() => {
             const today = new Date(); today.setHours(0, 0, 0, 0)
             const year = today.getFullYear(); const month = today.getMonth()
             const daysInMonth = new Date(year, month + 1, 0).getDate()
             const startOffset = new Date(year, month, 1).getDay()
             const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
-            const cells = [...Array(startOffset).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)]
+            const cells: (number | null)[] = [
+              ...Array.from({ length: startOffset }, (): null => null),
+              ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+            ]
             return (
               <div className="card px-4 py-4">
                 <p className="label-section mb-3">本月日曆</p>
@@ -140,7 +133,6 @@ export default function MonthlyReviewView({ currentUser, onClose }: Props) {
             )
           })()}
 
-          {/* Closing message */}
           <div className="flex flex-col items-center gap-3 py-4">
             <div className="cat-portrait w-20 h-20">
               <CatView expression="gentleSmile" size={66} />

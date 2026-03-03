@@ -46,8 +46,9 @@ export default function App() {
     const key = `lastWeeklyReviewWeek_${currentUser}`
     const shown = parseInt(localStorage.getItem(key) ?? '0', 10)
     if (shown !== thisWeek) {
-      setModal({ type: 'weekly' })
       localStorage.setItem(key, String(thisWeek))
+      const t = setTimeout(() => setModal({ type: 'weekly' }), 0)
+      return () => clearTimeout(t)
     }
   }, [currentUser])
 

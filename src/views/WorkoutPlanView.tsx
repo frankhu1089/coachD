@@ -22,6 +22,7 @@ export default function WorkoutPlanView({ currentUser, eventId, onClose }: Props
 
   function pickPlan(key: WorkoutPlanKey | 'random') {
     if (key === 'random') {
+      // eslint-disable-next-line react-hooks/purity
       const idx = Math.floor(Math.random() * workoutPlanKeys.length)
       setPicked(workoutPlanKeys[idx])
     } else {

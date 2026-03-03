@@ -78,6 +78,6 @@ export function autoContext(): string {
 }
 
 export function displayExcuse(excuse: string, customNote?: string): string {
-  if (excuse === '其他' && customNote && customNote.trim()) return customNote
+  if (excuse === '其他' && customNote?.trim()) return customNote
   return excuse
 }

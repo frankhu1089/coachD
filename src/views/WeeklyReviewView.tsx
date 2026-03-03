@@ -1,28 +1,27 @@
+import { useMemo } from 'react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import CatView from '../components/CatView'
 import { displayExcuse } from '../theme'
+import { isSameDay } from '../utils/date'
+import { WEEK_CONVERSION_GOOD, WEEK_CONVERSION_OK } from '../constants'
 import type { ExcuseEvent } from '../types'
 import type { UserId } from '../App'
 
 interface Props { currentUser: UserId; onClose: () => void }
 
-function isSameDay(ts: number, date: Date) {
-  const d = new Date(ts)
-  return d.getFullYear() === date.getFullYear() && d.getMonth() === date.getMonth() && d.getDate() === date.getDate()
-}
-
 const DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六']
 
 export default function WeeklyReviewView({ currentUser, onClose }: Props) {
-  const allEvents = (useQuery(api.excuseEvents.listAll) ?? []) as ExcuseEvent[]
-  const events = allEvents.filter((e: ExcuseEvent) => (e.userId ?? 'husband') === currentUser)
+  const eventsRaw = useQuery(api.excuseEvents.listByUser, { userId: currentUser })
+  const events = useMemo(() => (eventsRaw ?? []) as ExcuseEvent[], [eventsRaw])
 
-  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const weekEvents = events.filter((e: ExcuseEvent) => e.timestamp >= sevenDaysAgo)
+  // eslint-disable-next-line react-hooks/purity
+  const sevenDaysAgo = useMemo(() => Date.now() - 7 * 24 * 60 * 60 * 1000, [])
+  const weekEvents = events.filter((e) => e.timestamp >= sevenDaysAgo)
 
-  const fullCount = weekEvents.filter((e: ExcuseEvent) => e.status === 'full').length
-  const minimalCount = weekEvents.filter((e: ExcuseEvent) => e.status === 'minimal').length
+  const fullCount = weekEvents.filter((e) => e.status === 'full').length
+  const minimalCount = weekEvents.filter((e) => e.status === 'minimal').length
   const avoidanceCount = weekEvents.length
   const actionCount = fullCount + minimalCount
   const conversionRate = avoidanceCount > 0 ? Math.round(actionCount / avoidanceCount * 100) : 0
@@ -30,7 +29,7 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
   const topExcuse = (() => {
     if (!weekEvents.length) return null
     const counts: Record<string, number> = {}
-    weekEvents.forEach((e: ExcuseEvent) => {
+    weekEvents.forEach((e) => {
       const k = displayExcuse(e.excuse, e.customNote)
       counts[k] = (counts[k] ?? 0) + 1
     })
@@ -38,9 +37,9 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
     return top ? { name: top[0], count: top[1] } : null
   })()
 
-  const catMessage = conversionRate >= 70
+  const catMessage = conversionRate >= WEEK_CONVERSION_GOOD
     ? '這週你做得不錯耶。迪教練有點驕傲，喵。'
-    : conversionRate >= 40
+    : conversionRate >= WEEK_CONVERSION_OK
       ? topExcuse
         ? `這週你講了 ${topExcuse.count} 次「${topExcuse.name}」。下週試著早點睡吧，喵。`
         : '有進步的空間，但你已經在意識到了，這很重要。'
@@ -48,13 +47,10 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
 
   return (
     <div className="px-5 pb-8 font-sans">
-      {/* Header */}
       <div className="flex items-baseline justify-between pt-4 pb-5">
         <div>
           <h2 className="font-serif text-xl font-bold text-textPrimary">本週回顧</h2>
-          <p className="font-mono text-[10px] text-textSecondary mt-0.5 tracking-wide uppercase">
-            last 7 days
-          </p>
+          <p className="font-mono text-[10px] text-textSecondary mt-0.5 tracking-wide uppercase">last 7 days</p>
         </div>
         <button className="text-sm font-medium text-accent" onClick={onClose}>完成</button>
       </div>
@@ -71,14 +67,12 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Cat */}
           <div className="flex justify-center">
             <div className="cat-portrait w-24 h-24">
               <CatView expression="gentleSmile" size={80} />
             </div>
           </div>
 
-          {/* Stats ledger */}
           <div className="card divide-y divide-border">
             <LedgerRow label="本週逃避" value={avoidanceCount} unit="次" />
             <LedgerRow label="完整運動" value={fullCount} unit="次" color="text-green" />
@@ -86,7 +80,6 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
             <LedgerRow label="轉化率" value={conversionRate} unit="%" color="text-accent" bold />
           </div>
 
-          {/* Top excuse */}
           {topExcuse && (
             <div className="card px-4 py-4 flex items-center justify-between">
               <div>
@@ -100,7 +93,6 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
             </div>
           )}
 
-          {/* 7-day heatmap */}
           {(() => {
             const days = Array.from({ length: 7 }, (_, i) => {
               const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (6 - i)); return d
@@ -129,7 +121,6 @@ export default function WeeklyReviewView({ currentUser, onClose }: Props) {
             )
           })()}
 
-          {/* Cat message */}
           <div className="px-2 py-2 text-center">
             <p className="font-serif italic text-sm text-textSecondary leading-relaxed">
               「{catMessage}」

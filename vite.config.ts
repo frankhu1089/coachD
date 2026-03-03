@@ -3,9 +3,17 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // @ts-expect-error vitest augments vite config
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
         name: '迪教練',

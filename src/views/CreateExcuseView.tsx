@@ -35,6 +35,7 @@ export default function CreateExcuseView({ currentUser, onClose, onCreated }: Pr
       })
       onCreated(id)
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('create failed', err)
       alert('出錯了，請再試一次')
       setSubmitting(false)
@@ -103,7 +104,7 @@ export default function CreateExcuseView({ currentUser, onClose, onCreated }: Pr
             placeholder="說說看…"
             value={customNote}
             onChange={e => setCustomNote(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && customNote.trim()) submit() }}
+            onKeyDown={e => { if (e.key === 'Enter' && customNote.trim()) void submit() }}
             autoFocus
           />
         )}

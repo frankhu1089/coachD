@@ -10,5 +10,7 @@ export default defineSchema({
     suggestedAction: v.string(),
     status: v.optional(v.string()),
     userId: v.optional(v.string()),
-  }).index('by_timestamp', ['timestamp']),
+  })
+    .index('by_timestamp', ['timestamp'])
+    .index('by_userId_timestamp', ['userId', 'timestamp']),
 })
